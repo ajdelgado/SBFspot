@@ -1,19 +1,19 @@
 #drop database if exists SBFspot;
 
-CREATE Database SBFspot;
+CREATE DATABASE IF NOT EXISTS SBFspot;
 
 USE SBFspot;
 
-CREATE Table Config (
+CREATE TABLE IF NOT EXISTS Config (
 	`Key` varchar(32),
 	`Value` varchar(200),
 	PRIMARY KEY (`Key`)
 );
 
-INSERT INTO Config VALUES('SchemaVersion','1');
+INSERT IGNORE INTO Config VALUES('SchemaVersion','1');
 
-CREATE Table Inverters (
-	Serial int(4) NOT NULL,
+CREATE TABLE IF NOT EXISTS Inverters (
+	Serial BIGINT NOT NULL,
 	Name varchar(32),
 	Type varchar(32),
 	SW_Version varchar(32),
@@ -29,7 +29,7 @@ CREATE Table Inverters (
 	PRIMARY KEY (Serial)
 );
 
-CREATE View vwInverters AS
+CREATE OR REPLACE VIEW vwInverters AS
 	Select Serial,
 	Name,Type,SW_Version,
 	From_UnixTime(TimeStamp) AS TimeStamp,
@@ -40,9 +40,9 @@ CREATE View vwInverters AS
 	Temperature
 	FROM Inverters;
 
-CREATE Table SpotData (
+CREATE TABLE IF NOT EXISTS SpotData (
 	TimeStamp int(4) NOT NULL,
-	Serial int(4) NOT NULL,
+	Serial BIGINT NOT NULL,
 	Pdc1 int(4), Pdc2 int(4),
 	Idc1 float, Idc2 float,
 	Udc1 float, Udc2 float,
@@ -61,7 +61,7 @@ CREATE Table SpotData (
 );
 
 -- Fix 02-MAY-2016 See Issue 150
-CREATE View vwSpotData AS
+CREATE OR REPLACE VIEW vwSpotData AS
     Select From_UnixTime(Dat.TimeStamp) AS TimeStamp,
     From_UnixTime(CASE WHEN (Dat.TimeStamp % 300) < 150
     THEN Dat.TimeStamp - (Dat.TimeStamp % 300)
@@ -99,16 +99,16 @@ CREATE View vwSpotData AS
     FROM SpotData Dat
 INNER JOIN Inverters Inv ON Dat.Serial=Inv.Serial;
 
-CREATE Table DayData (
+CREATE TABLE IF NOT EXISTS DayData (
 	TimeStamp int(4) NOT NULL,
-	Serial int(4) NOT NULL,
+	Serial BIGINT NOT NULL,
 	TotalYield int(8),
 	Power int(8),
 	PVoutput int(1),
 	PRIMARY KEY (TimeStamp, Serial)
 );
 
-CREATE View vwDayData AS
+CREATE OR REPLACE VIEW vwDayData AS
 	select From_UnixTime(Dat.TimeStamp) AS TimeStamp,
 	Inv.Name, Inv.Type, Dat.Serial,
 	TotalYield,
@@ -117,25 +117,25 @@ CREATE View vwDayData AS
 INNER JOIN Inverters Inv ON Dat.Serial=Inv.Serial
 ORDER BY Dat.Timestamp Desc;
 
-CREATE Table MonthData (
+CREATE TABLE IF NOT EXISTS MonthData (
 	TimeStamp int(4) NOT NULL,
-	Serial int(4) NOT NULL,
+	Serial BIGINT NOT NULL,
 	TotalYield int(8),
 	DayYield int(8),
 	PRIMARY KEY (TimeStamp, Serial)
 );
 
-CREATE View vwMonthData AS
+CREATE OR REPLACE VIEW vwMonthData AS
 	select convert_tz(from_unixtime(Dat.TimeStamp), 'SYSTEM', '+00:00') AS TimeStamp,
 	Inv.Name, Inv.Type, Dat.Serial,
 	TotalYield, DayYield FROM MonthData Dat
 INNER JOIN Inverters Inv ON Dat.Serial=Inv.Serial
 ORDER BY Dat.Timestamp Desc;
 
-CREATE Table EventData (
+CREATE TABLE IF NOT EXISTS EventData (
 	EntryID int(4),
 	TimeStamp int(4) NOT NULL,
-	Serial int(4) NOT NULL,
+	Serial BIGINT NOT NULL,
 	SusyID int(2),
 	EventCode int(4),
 	EventType varchar(32),
@@ -148,7 +148,7 @@ CREATE Table EventData (
 	PRIMARY KEY (Serial, EntryID)
 );
 
-CREATE View vwEventData AS
+CREATE OR REPLACE VIEW vwEventData AS
 	select From_UnixTime(Dat.TimeStamp) AS TimeStamp,
 	Inv.Name, Inv.Type, Dat.Serial,
 	SusyID, EntryID,
@@ -159,14 +159,14 @@ CREATE View vwEventData AS
 INNER JOIN Inverters Inv ON Dat.Serial=Inv.Serial
 ORDER BY EntryID Desc;
 
-CREATE Table Consumption (
+CREATE TABLE IF NOT EXISTS Consumption (
 	TimeStamp int(4) NOT NULL,
 	EnergyUsed int(4),
 	PowerUsed int(4),
 	PRIMARY KEY (TimeStamp)
 );
 
-CREATE VIEW vwConsumption AS
+CREATE OR REPLACE VIEW vwConsumption AS
 	SELECT From_UnixTime(TimeStamp) As Timestamp,
 	From_UnixTime(CASE WHEN (TimeStamp % 300) < 150
 	THEN TimeStamp - (TimeStamp % 300)
@@ -177,14 +177,14 @@ CREATE VIEW vwConsumption AS
 	FROM Consumption;
 
 -- Fix 02-MAY-2016 See Issue 150
-CREATE VIEW vwAvgConsumption AS
+CREATE OR REPLACE VIEW vwAvgConsumption AS
     SELECT Nearest5min,
     cast(avg(EnergyUsed) As decimal(9)) As EnergyUsed,
     cast(avg(PowerUsed) As decimal(9)) As PowerUsed
     FROM vwConsumption
     GROUP BY Nearest5Min;
 
-CREATE VIEW vwAvgSpotData AS
+CREATE OR REPLACE VIEW vwAvgSpotData AS
        SELECT nearest5min,
               serial,
               cast(avg(Pdc1) as decimal(9)) AS Pdc1,
@@ -206,7 +206,7 @@ CREATE VIEW vwAvgSpotData AS
         FROM vwSpotData
         GROUP BY serial, nearest5min;
 
-CREATE VIEW vwPvoData AS
+CREATE OR REPLACE VIEW vwPvoData AS
        SELECT dd.Timestamp,
               dd.Name,
               dd.Type,
@@ -232,7 +232,7 @@ CREATE VIEW vwPvoData AS
         ORDER BY dd.Timestamp DESC;
 
 -- Fix 09-JAN-2017 See Issue 54: SQL Support for battery inverters
-CREATE TABLE SpotDataX (
+CREATE TABLE IF NOT EXISTS SpotDataX (
     `TimeStamp` INTEGER (4) NOT NULL,
     `Serial`    INTEGER (4) NOT NULL,
     `Key`       INTEGER (4) NOT NULL,
@@ -246,7 +246,7 @@ CREATE TABLE SpotDataX (
 
 DROP VIEW IF EXISTS vwBatteryData;
 
-CREATE VIEW vwBatteryData AS
+CREATE OR REPLACE VIEW vwBatteryData AS
     SELECT FROM_UNIXTIME(sdx.`TimeStamp` - (sdx.`TimeStamp` % 300)) AS `5min`,
            sdx.`Serial`,
            inv.`Name`,
