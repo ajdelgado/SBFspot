@@ -37,11 +37,9 @@ DISCLAIMER:
 
 const uint32_t MAX_INVERTERS = 20;
 
-using namespace boost;
-
 int main(int argc, char **argv)
 {
-#if defined(WIN32)
+#if defined(_WIN32)
 	// On Windows, switch console to UTF-8
 	SetConsoleOutputCP(CP_UTF8);
 #endif
@@ -65,7 +63,7 @@ int main(int argc, char **argv)
     quiet = cfg.quiet;
     ConnType = cfg.ConnectionType;
 
-    if ((ConnType != CT_BLUETOOTH) && (cfg.settime == 1))
+    if ((ConnType != CT_BLUETOOTH) && cfg.settime)
     {
         std::cout << "-settime is only supported for Bluetooth devices" << std::endl;
         return 0;
@@ -88,9 +86,9 @@ int main(int argc, char **argv)
             printf("sunset : %02d:%02d\n", (int)cfg.sunset, (int)((cfg.sunset - (int)cfg.sunset) * 60));
         }
 
-        if ((cfg.forceInq == 0) && (cfg.isLight == 0))
+        if ((!cfg.forceInq) && (!cfg.isLight))
         {
-            if (quiet == 0) puts("Nothing to do... it's dark. Use -finq to force inquiry.");
+            if (!quiet) puts("Nothing to do... it's dark. Use -finq to force inquiry.");
             return 0;
         }
     }
@@ -103,9 +101,9 @@ int main(int argc, char **argv)
     }
 
     Inverter inverter(cfg);
-    inverter.process();
+    rc = inverter.process();
 
     if (VERBOSE_NORMAL) print_error(stdout, PROC_INFO, "Done.\n");
 
-    return 0;
+    return rc;
 }

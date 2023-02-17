@@ -1,5 +1,5 @@
 /************************************************************************************************
-    SBFspot - Yet another tool to read power production of SMA solar inverters
+    SBFspot - Yet another tool to read power production of SMA® solar inverters
     (c)2012-2022, SBF
 
     Latest version found at https://github.com/SBFspot/SBFspot
@@ -35,15 +35,36 @@ DISCLAIMER:
 #pragma once
 
 #include "osselect.h"
+#include "nan.h"
 
-#include <time.h>
-#include <math.h>
-#include <string.h>     //memcpy
+class mppt
+{
+private:
+    int32_t m_Pdc = NaN_S32;
+    int32_t m_Udc = NaN_S32;
+    int32_t m_Idc = NaN_S32;
 
-#ifndef pi
-#define pi 3.141592653589793
-#endif
-#define dtr(x) (pi / 180) * (x) //Convert degrees to radians
-#define rtd(x) (180 / pi) * (x) //Convert radians to degrees
+public:
+    mppt() { }
+    mppt(const int32_t Pdc, const int32_t Udc, const int32_t Idc)
+    {
+        m_Pdc = Pdc;
+        m_Udc = Udc;
+        m_Idc = Idc;
+    }
+    ~mppt() { }
 
-bool sunrise_sunset(float latit, float longit, float *sunrise, float *sunset, float offset);
+    int32_t Pdc() const { return m_Pdc; }
+    int32_t Udc() const { return m_Udc; }
+    int32_t Idc() const { return m_Idc; }
+    float kW() const { return (float)(m_Pdc) / 1000; }
+    float Watt() const { return (float)(m_Pdc); }
+    float Volt() const { return (float)(m_Udc) / 100; }
+    float Amp() const { return (float)(m_Idc) / 1000; }
+
+    void Pdc(const int32_t Pdc) { m_Pdc = Pdc; }
+    void Udc(const int32_t Udc) { m_Udc = Udc; }
+    void Idc(const int32_t Idc) { m_Idc = Idc; }
+
+};
+
