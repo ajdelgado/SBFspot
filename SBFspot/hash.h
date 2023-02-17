@@ -34,16 +34,12 @@ DISCLAIMER:
 
 #pragma once
 
-#include "osselect.h"
+namespace djb   // Daniel J. Bernstein
+{
+    constexpr inline size_t hash(const char *str, size_t h = 0)
+    {
+        return str[h] == 0 ? 5381 : (hash(str, h + 1) * 33) ^ str[h];
+    }
+}
 
-#include <time.h>
-#include <math.h>
-#include <string.h>     //memcpy
-
-#ifndef pi
-#define pi 3.141592653589793
-#endif
-#define dtr(x) (pi / 180) * (x) //Convert degrees to radians
-#define rtd(x) (180 / pi) * (x) //Convert radians to degrees
-
-bool sunrise_sunset(float latit, float longit, float *sunrise, float *sunset, float offset);
+constexpr inline size_t operator "" _(const char *str, size_t) { return djb::hash(str); }

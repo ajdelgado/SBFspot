@@ -10,17 +10,17 @@ CREATE TABLE IF NOT EXISTS Config (
 	PRIMARY KEY (`Key`)
 );
 
-INSERT IGNORE INTO Config VALUES('SchemaVersion','1');
+INSERT IGNORE INTO Config VALUES('SchemaVersion','2');
 
 CREATE TABLE IF NOT EXISTS Inverters (
 	Serial BIGINT NOT NULL,
 	Name varchar(32),
 	Type varchar(32),
 	SW_Version varchar(32),
-	TimeStamp int(4),
-	TotalPac int(4),
-	EToday int(8),
-	ETotal int(8),
+	TimeStamp int,
+	TotalPac int,
+	EToday bigint,
+	ETotal bigint,
 	OperatingTime double,
 	FeedInTime double,
 	Status varchar(10),
@@ -46,10 +46,10 @@ CREATE TABLE IF NOT EXISTS SpotData (
 	Pdc1 int(4), Pdc2 int(4),
 	Idc1 float, Idc2 float,
 	Udc1 float, Udc2 float,
-	Pac1 int(4), Pac2 int(4), Pac3 int(4),
+	Pac1 int, Pac2 int, Pac3 int,
 	Iac1 float, Iac2 float, Iac3 float,
 	Uac1 float, Uac2 float, Uac3 float,
-	EToday int(8), ETotal int(8),
+	EToday bigint, ETotal bigint,
 	Frequency float,
 	OperatingTime double,
 	FeedInTime double,
@@ -142,8 +142,8 @@ CREATE TABLE IF NOT EXISTS EventData (
 	Category varchar(32),
 	EventGroup varchar(32),
 	Tag varchar(200),
-	OldValue varchar(32),
-	NewValue varchar(32),
+	OldValue varchar(200),
+	NewValue varchar(200),
 	UserGroup varchar(10),
 	PRIMARY KEY (Serial, EntryID)
 );
